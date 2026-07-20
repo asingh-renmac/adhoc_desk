@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+---
+
+# Ad-hoc econ desk — quick lookups & small calcs
+
+This workspace (`_desk`) is for **micro tasks**: find/confirm a ticker, pull a
+couple of series, run a small calculation, hand back a number to drop into
+commentary — the kind of thing the full `newproj` scaffold is too heavy for.
+This rule is desk-only; it is NOT copied into real projects.
+
+## Workflow (no plan.md, no approval gate)
+
+Replace the project STOP-gate with a micro-preamble, then just do it:
+
+1. **Preamble (≤2 lines):** state (a) the series you'll use — confirmed
+   `code@database` — and (b) the calculation you'll run. That's it. No
+   `plan.md`, no waiting for "approved".
+2. **Discover tickers MCP-first.** Use the haver-metadata MCP
+   (`search_series` → `get_series`) to confirm `code@database` + frequency +
+   span + units + SA/NSA before pulling. NEVER guess a mnemonic. If several
+   candidates fit, list them and pick with a one-line reason; ask only if it's
+   genuinely unresolvable. (Full discovery discipline is in
+   `10-data-sources.mdc`, active in this workspace.)
+3. **Pull + cache.** Use the reference patterns — Haver
+   `@C:/Users/asingh/new_work/econ-templates/data/haver_pull.py`, FRED
+   `@C:/Users/asingh/new_work/econ-templates/data/fred_pull.py`, Bloomberg
+   `@C:/Users/asingh/new_work/econ-templates/data/bbg_xbbg.py`. Save the raw
+   pull to `cache/` as Parquet; print first/last date + row count so the
+   window used is visible.
+4. **Show the calculation explicitly** — inputs → transform → result, with
+   units. The derivation is the deliverable, not just the final number.
+5. **Answer in the output contract** from
+   `@C:/Users/asingh/new_work/econ-templates/prompts/adhoc_lookup.md`.
+6. **Log it (light audit trail):** write a short dated note to
+   `tasks/YYYY-MM-DD_<slug>.md` — the question, the series used, the number,
+   one-line caveat. Keeps the desk greppable later.
+
+## Discipline that still applies
+
+- **Real numbers only.** If the data isn't available or the window is
+  incomplete, say so — never fill a placeholder like `$XXX` with a guess.
+- **Caveats travel with the number.** Vintage (real-time vs latest), SA vs
+  NSA, real vs nominal, rounding — state whichever bites the answer.
+- **Promote reusable mnemonics.** If you confirm a new, broadly-useful
+  `code@database`, surface it for the `10-data-sources.mdc` Confirmed list on
+  a human-approve basis — don't auto-add (that list is trusted and reused
+  without re-checking).
+- **Environment discipline** (Git Bash + shared venv) from
+  `05-environment.mdc` applies here too.
+
+## What NOT to do
+
+- Don't scaffold a project, write a `plan.md`, or wait for an "approved" gate
+  — skipping that ceremony is the whole point of the desk.
+- Don't run the full `40-validate` gates, the SA/chart rules, or the
+  post-analysis email flow — those belong to real projects.
+- Don't guess a Haver mnemonic or invent a `@database` suffix — MCP-confirm
+  or ask.
+- Don't hand back a bare number — show the calc, the series provenance, and
+  the caveat.
+- Don't let a task quietly grow into a full analysis here. The moment it needs
+  figures, a model, or a newsletter, STOP and move it to `newproj <name>`.
