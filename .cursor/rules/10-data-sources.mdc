@@ -11,6 +11,38 @@ Haver: @C:/Users/asingh/new_work/econ-templates/data/haver_pull.py
 Bloomberg: @C:/Users/asingh/new_work/econ-templates/data/bbg_xbbg.py
 Macrobond: @C:/Users/asingh/new_work/econ-templates/data/macrobond_pull.py
 FRED: @C:/Users/asingh/new_work/econ-templates/data/fred_pull.py
+BEA GDP-by-Industry: @C:/Users/asingh/new_work/econ-templates/data/bea_pull.py
+BLS (CES/CPS/P&C): @C:/Users/asingh/new_work/econ-templates/data/bls_pull.py
+Eurostat (public JSON-stat API, no key): @C:/Users/asingh/new_work/econ-templates/data/eurostat_pull.py
+
+## Haver — MANDATORY setup
+
+Haver DLX 3.5.1 REQUIRES `Haver.direct("on")` before ANY Haver.data() call.
+Auto path detection is unreliable and will fail the connection if you skip it.
+
+- This call is already made ONCE at module load in haver_pull.py. Always go
+  through that module (copy its setup block verbatim if adapting) — do NOT
+  write a bare `import Haver; Haver.data(...)` connection test, which skips
+  direct("on") and produces a spurious "connection failed" that costs a debug
+  cycle. If you need to smoke-test, call haver_pull.test_haver_connection().
+- If a Haver test fails, FIRST verify direct("on") ran, before assuming the
+  install or entitlement is broken.
+
+## Eurostat — public API, no key
+
+@C:/Users/asingh/new_work/econ-templates/data/eurostat_pull.py
+
+- Plain HTTPS GET against the JSON-stat dissemination API — no key, no vendor
+  DLL. Allowlist `ec.europa.eu` in sandbox.json for the project.
+- The load-bearing gotcha (encoded): the response is a flat `value` dict keyed by
+  a single integer offset over an N-dimensional cube. Decode it with row-major
+  strides from `id`/`size`/category `index` — never assume dim ordering or a
+  dense array. `_decode_jsonstat` does this for any dim count; use it, don't
+  re-derive the indexing by hand.
+- `s_adj` is a DIMENSION (NSA/SCA/SA/CA), not a flag — quarterly national
+  accounts want SCA. Pin the geo you mean (`EU27_2020` = post-Brexit aggregate).
+- `nace_a10_quarterly("va"|"hours", geo=...)` is the ready convenience for A*10
+  real value added / hours worked; `eurostat_wide(...)` is the generic path.
 
 ## Scrapers and derived-series helpers (non-vendor sources)
 
@@ -74,6 +106,101 @@ DPCERA3M086SBEA) are documented in the scripts above. If any should join
 the trusted "Confirmed mnemonics" list below, that's a human-approval step
 — don't auto-promote them.
 
+Custom price aggregates (combine components, or exclude one from a parent):
+use the INSTALLED `rmac-econ` package. Do not re-derive this arithmetic, and do
+not copy it into `src/` — import it and pin the version.
+
+    from rmac_econ.indexes import chain_aggregate, chain_subtract        # PCE
+    from rmac_econ.indexes import laspeyres_aggregate, laspeyres_exclude  # CPI
+
+    chain_aggregate(nominal=df, real=df, kind="fisher_of_fishers", ref_period="2017")
+    chain_subtract(nominal=df, real=df, parent="services_ex_energy")
+      -> ChainResult(quantity_growth, price_growth, price_index, quantity_index, nominal)
+    laspeyres_aggregate(prices=df, weights=ri_df, base="2017-12", method="monthly")
+    laspeyres_exclude(parent_price=s, excluded_prices=df,
+                      parent_weight=w, excluded_weights=w, method="monthly")
+      -> pd.Series (index level)
+
+- NEVER add or subtract chain-weighted (Fisher) index levels. PCE is
+  chain-weighted, so aggregation and exclusion both go through nominal + real.
+  CPI's relative-importance form IS linear in weighted price relatives, so the
+  Laspeyres pair may subtract — that licence does not transfer to PCE.
+- The chain functions need nominal AND real (or `quantity=`) per component,
+  never price levels alone. The CPI pair needs price levels plus BLS relative
+  importances in parts per 100 (Haver `IPCU*` / `IUCX*`, monthly).
+- Defaults are the accurate choice on both sides — CPI `method="monthly"`, PCE
+  `kind="fisher_of_fishers"`. Do not override without a stated reason.
+  `method="fixed"` is a constant-basket index, NOT a cheap approximation: it
+  freezes the BLS weights at one December and can run ~30 bp hot on y/y, same
+  sign every month. Never use `tornqvist_arithmetic` (legacy, biased −15.6 bp
+  on y/y) for new work.
+- Validated on every commit against six published Haver series: PCE exclusion to
+  0.02 bp on m/m, CPI to ~0.3 bp with monthly re-anchoring. Method rankings and
+  derivations are in the package's `docs/index_transforms_NOTES.md`.
+- LEVELS are the weak spot, not growth rates. A Fisher index is not consistent
+  in aggregation, so a reconstruction can drift >1% in level over decades while
+  m/m stays inside 2 bp. Report growth rates from a reconstruction; justify any
+  use of its level.
+- The package's own test suite proves the LIBRARY, not your analysis. If this
+  project needs a guarantee, replicate a published aggregate from its own
+  components and gate on that in `40-validate.mdc` terms.
+- If the import fails, the shared env predates the package: STOP and ask, do not
+  vendor a copy. Source: https://github.com/renmac-econ/rmac_econ
+
+## Component ticker catalogs — PCE and CPI (CHECK BEFORE RE-DERIVING)
+
+Value-verified component/ticker inventories. If a project needs PCE or CPI
+subcomponent tickers, weights, or a PCE↔CPI/PPI proxy map, START HERE — these
+were expensive to build and every ticker is verified against the source, not
+name-matched. Re-deriving them by MCP search is slower AND less reliable.
+
+PCE: @C:/Users/asingh/new_work/econ-templates/data/reference/pce/README.md
+- `mb_pce_tickers_master.csv` — 151 core + 26 F&E nominal PCE tickers
+  (Macrobond), bucketed Core Goods / Core Services / Food / Energy, with
+  per-series start dates. Plus the 6 reference aggregates (core/total nominal
+  denominators, core/headline price indexes, CPI context).
+- `mb_to_haver_ticker_crosswalk.{csv,xlsx}` — the Macrobond→Haver port,
+  183/183 value-verified, one unique Haver code per leaf. Carries `bea_code`
+  (Macrobond's `BeaCode`) and `unit_scale_mb_over_haver`.
+- `pce_cpi_ppi_proxy_crosswalk.csv` — the nowcast bridge: each PCE leaf's
+  CPI/PPI proxy with `is_ppi`, `seasonal_status`, `sa_flag_x13`, `sign`.
+- `market_based_pce_classification.csv` — the 13 non-market leaves + reasons
+  (needed whenever you target a BEA *market-based* aggregate).
+- `ismi_pce_panel_tickers.csv` — the 130-category Haver USNA panel (price /
+  nominal / quantity) with core-vs-F&E classification.
+
+CPI: @C:/Users/asingh/new_work/econ-templates/data/reference/cpi/README.md
+- Four component baskets → Macrobond tickers, each verified against the BLS
+  supplemental table exactly (max relative error 0.00e+00), each with a
+  `detail` sheet (BLS series ID, item code, relative importance, SA status).
+- **Pick deliberately** — the four cut the CPI tree differently, and they are
+  NOT interchangeable within one time series (switching mid-chart creates a
+  break). `cpi_partition_*` (164, 99.4% of weight) is the DEFAULT: a true
+  partition, mutually exclusive and near-exhaustive.
+  `cpi_partition_max_granularity_*` (178, 97.0%) is that same partition
+  descended deeper, buying components at the cost of ~3% leaked weight.
+  `cpi_cleveland_fed_45` is the citable median-CPI set. `cpi_basket_*` (204) is
+  the odd one out — NOT a partition and not exhaustive (20.8% of weight missing),
+  with 66 footnote-(6) sub-sample rows carrying no relative importance: fine for
+  an UNWEIGHTED diffusion count, WRONG for a weighted decomposition.
+- These are a monthly BLS vintage (relative importances change) — re-run the
+  upstream pipeline rather than hand-editing the workbooks.
+
+Load-bearing gotchas from building these:
+
+- **Haver carries NO BEA code field.** Macrobond exposes `BeaCode` on BEA-sourced
+  series, but nothing on the Haver side joins to it — don't burn time trying.
+  Match Macrobond↔Haver by VALUE (m/m %) instead.
+- **Two gates, not one, when value-matching.** m/m correlation alone will happily
+  match a CHILD to its PARENT aggregate (they correlate ~1.000). Require the
+  level ratio to be clean too — exactly 1e6 for Macrobond raw USD vs Haver Mil.$,
+  or 1.0 for indexes. An exact ratio plus identical m/m proves the same series.
+- **Never filter the Haver PCE candidate pool by descriptor** — `cslem` is
+  "Household Consumption Expenditures: Electricity" with no "PCE" in the name.
+  Filter on Haver group `N68` (monthly US$ PCE nominals) instead.
+- A flat CONSTANT series (e.g. BEA `DREERC0`) has m/m ≡ 0 and cannot be matched
+  by correlation — verify it by a constant level ratio.
+
 ## Confirmed mnemonics (recorded so we don't re-browse DLX)
 
 - Published NY/Dallas Fed WEI: FWEIW@WEEKLY
@@ -98,6 +225,14 @@ the trusted "Confirmed mnemonics" list below, that's a human-approval step
   days are where diff() ≠ 0 — use that to classify cut / hike / hold
   (e.g. 2008-10-29: 1.50→1.00 = −50bp cut). Complements FTARCHG@DAILY
   (+1/−1 change flag) when you need the size/sign of the move.
+- PCE BVAR input panel (nine monthly series: headline/core PCE price, import
+  price, PPI all-commodities, CPI all-items SA, core CPI, core-goods CPI,
+  trade-weighted dollar, WTI) — value-matched against BEA/FRED in
+  `2026_pce_bvar_mucsv_port`. Confirmed tickers + spans live in that project's
+  `notes/haver_mnemonics.md` §4 (each matched BEA 51/51 or FRED exactly), NOT
+  enumerated line-by-line here. Canonical mnemonics are in §1 of that file;
+  the harvest text's inline names are informal. Port a ticker into this list
+  only after re-vetting it individually.
 
 ## Discovering Haver mnemonics
 
@@ -110,6 +245,9 @@ it in automatically; that list is trusted and reused without
 re-checking, so every line must be human-vetted. If the MCP isn't in
 this workspace, ASK — never guess.
 
+- For PCE or CPI COMPONENTS, check `data/reference/pce/` and
+  `data/reference/cpi/` (above) before searching — those tickers are already
+  resolved and value-verified, and a search will only re-derive them worse.
 - Narrow search_series with the databases, frequency, geography, and
   sa_status filters when you know them — fewer, sharper candidates.
 - Discontinued series are returned and LABELED (is_discontinued), not
@@ -143,3 +281,21 @@ Mandatory patterns from the references:
 - Tickers required by this project are in @prompt.md under "Data".
 - If a Haver mnemonic, Bloomberg field, or Macrobond series ID is
   ambiguous, ASK — never guess.
+
+## Cross-source gotchas (2026_pce_bvar_mucsv_port)
+
+- **Haver sometimes carries far more history than FRED — check before building
+  a splice.** FXTWBDI@USECON carries the Fed's trade-weighted-dollar
+  back-estimate to 1973-03 while FRED's TWEXBGSMTH starts only 2006-01; a
+  planned FRED splice turned out unnecessary. Pull the Haver span first.
+- **Vendor gap-filling is per-series and undisclosed; never generalise from one
+  series.** During the Oct-2025 shutdown, three CPI series from one vendor were
+  filled three different ways (one an exact linear interpolation, another only
+  ~38% of the way from a carry-forward). No single rule, no documentation.
+  Prefer your own declared estimate even where the numbers happen to agree.
+- **MCP/metadata spans are not authoritative — re-derive the endpoint from the
+  pull.** All 89 series here reported a uniform `2026-04` from the metadata MCP
+  while the actual DLX pull ran to `2026-06`; a uniform identical end_date
+  across a large resolution set is the tell. Probe a handful of tickers and
+  diff the realised endpoint against the catalog's claim before sizing a pull
+  (the probe-before-pull helper in `data/`).

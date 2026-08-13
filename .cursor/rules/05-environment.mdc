@@ -58,6 +58,29 @@ the .bashrc venv auto-activation isn't running.
 If FRED_KEY_OK or MSGRAPH_OK is False, config/.env isn't being
 sourced from .bashrc. Both are user-level configuration issues.
 
+## Env loading order — shared, then project-local
+
+Two `.env` files, loaded in this order by any entry point that needs them
+(`send_via_graph.py` already does this; mirror it in project scripts):
+
+1. `econ-templates/config/.env` — shared credentials and shared lists
+   (`AS_MSGRAPH_*`, `FRED_API_KEY`, `ECON_DAILY_RECIPIENTS`). Loaded with
+   `override=False`, so a shell-set value still wins.
+2. `<project_root>/config/.env` — this project's own vars, created by the
+   scaffolder. Loaded with `override=True`: **project-local values win on
+   collision.**
+
+Project-specific vars (recipients, project flags) go in the project-local file
+and are NEVER appended to `econ-templates/config/.env`, which stays reserved
+for shared credentials. Scoping comes from the file's location, not from the
+variable's name — so every project uses the same name,
+`PROJECT_EMAIL_RECIPIENTS`, and the right value is picked up by running from
+the project root. Both files are gitignored.
+
+Because step 2 overrides, an exported shell value does NOT beat the
+project-local file. That's deliberate: the project file is the scoping
+mechanism.
+
 ## Path conventions in Git Bash
 
 Git Bash translates /c/Users/... to C:\Users\... when passing as

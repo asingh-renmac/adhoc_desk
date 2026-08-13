@@ -59,7 +59,11 @@
     "jstatsoft.org",
     "www.jstatsoft.org",
     "www.chicagofed.org",
-    "chicagofed.org"
+    "chicagofed.org",
+    "doi.org",
+    "www.mitpressjournals.org",
+    "www.newyorkfed.org",
+    "www.princeton.edu"
   ],
   "deniedDomains": []
 }
