@@ -84,6 +84,20 @@ the trusted "Confirmed mnemonics" list below, that's a human-approval step
   stitch). MTS withheld income: ftgriw@GOVFIN; employment: ftgrse@GOVFIN.
 - Real GDP (quarterly, for WEI scaling): GDPH@USNA — NOT @USECON.
 - NSA UI claims weekly: LICN@WEEKLY (initial), LIUN@WEEKLY (continuing).
+- FOMC meeting shading (DAILY, +1=event / -1=none; 5-day shading windows):
+  FOMC@DAILY (all meetings incl. unscheduled/conference calls); FOMCS@DAILY
+  (scheduled only); FTARCHG@DAILY (funds-target rate change). Weekend
+  meetings are remapped to the next business day (see Haver notes). Before
+  joining market series, collapse each contiguous FOMC=+1 block to its
+  LAST day (announcement proxy) — raw +1 days are not 1:1 with decision
+  dates. Pull via pull_haver_daily() in haver_pull.py (never the monthly
+  helper). Bloomberg alternative: BDH ECO_RELEASE_DT on FDTR Index
+  (not FDTRMID) — see bbg_xbbg.py gotcha 12.
+- FOMC funds target on announcement path: FFEDTR@DAILY (%). Step-filled
+  daily level of the target (range midpoint when applicable); announcement
+  days are where diff() ≠ 0 — use that to classify cut / hike / hold
+  (e.g. 2008-10-29: 1.50→1.00 = −50bp cut). Complements FTARCHG@DAILY
+  (+1/−1 change flag) when you need the size/sign of the move.
 
 ## Discovering Haver mnemonics
 
