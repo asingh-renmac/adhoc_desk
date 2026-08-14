@@ -36,6 +36,27 @@ Replace the project STOP-gate with a micro-preamble, then just do it:
    `tasks/YYYY-MM-DD_<slug>.md` — the question, the series used, the number,
    one-line caveat. Keeps the desk greppable later.
 
+## Rule freshness (once per session, before the first task)
+
+The rule files here and `sandbox.json` are **copies** — the originals live in
+`econ-templates`, and the desk is long-lived, so it silently falls behind.
+Check once, at the start of a session:
+
+```bash
+/c/Users/asingh/new_work/econ-templates/scripts/setup-adhoc-desk.sh --check
+```
+
+- **In sync** → say nothing, get on with the task. Don't re-run it later in
+  the same session.
+- **DRIFTED** → report which files in one line, then ask before resolving.
+  Never refresh on your own initiative: a refresh **overwrites** the desk copy,
+  so it destroys the difference before anyone has read it. Drift means one of
+  two opposite things, and only a human can say which:
+  - templates moved ahead → `--refresh-rules` pulls the update in;
+  - a rule was edited here (knowledge worked out at the desk) → that edit must
+    be ported into `econ-templates` and committed there **first**, or the next
+    refresh silently deletes it.
+
 ## Discipline that still applies
 
 - **Real numbers only.** If the data isn't available or the window is
@@ -57,6 +78,9 @@ Replace the project STOP-gate with a micro-preamble, then just do it:
   post-analysis email flow — those belong to real projects.
 - Don't guess a Haver mnemonic or invent a `@database` suffix — MCP-confirm
   or ask.
+- Don't quietly edit `.cursor/rules/*.mdc` or `sandbox.json` here to fix
+  something — they're copies, and the fix dies at the next refresh. Change the
+  `econ-templates` original, then refresh.
 - Don't hand back a bare number — show the calc, the series provenance, and
   the caveat.
 - Don't let a task quietly grow into a full analysis here. The moment it needs
