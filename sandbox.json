@@ -63,7 +63,8 @@
     "doi.org",
     "www.mitpressjournals.org",
     "www.newyorkfed.org",
-    "www.princeton.edu"
+    "www.princeton.edu",
+    "www.frbsf.org"
   ],
   "deniedDomains": []
 }

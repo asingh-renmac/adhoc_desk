@@ -1,19 +1,24 @@
 ---
-description: How to pull macro data — use these reference scripts (vendor clients, scrapers, derived-series helpers)
+name: 10-data-sources
+description: "How to pull macro data — use these reference scripts (vendor clients, scrapers, derived-series helpers)"
+when_to_use: "Use before writing or running any code that pulls a data series (Haver, Bloomberg, Macrobond, FRED, BEA, BLS, Eurostat, UMich and the other reference scripts), or when choosing or confirming a ticker or Haver mnemonic."
 ---
+<!-- Generated from econ-templates/.cursor-rules-template/10-data-sources.mdc by scripts/mdc_to_claude.py. Edit the .mdc, not this copy. -->
+
+> File paths in this document are references, not attachments: read a referenced file before writing code that mirrors it.
 
 # Data source conventions
 
 The shared venv has Haver, xbbg, win32com (Macrobond), fredapi already.
 Use them directly. Follow the patterns in these reference scripts:
 
-Haver: @C:/Users/asingh/new_work/econ-templates/data/haver_pull.py
-Bloomberg: @C:/Users/asingh/new_work/econ-templates/data/bbg_xbbg.py
-Macrobond: @C:/Users/asingh/new_work/econ-templates/data/macrobond_pull.py
-FRED: @C:/Users/asingh/new_work/econ-templates/data/fred_pull.py
-BEA GDP-by-Industry: @C:/Users/asingh/new_work/econ-templates/data/bea_pull.py
-BLS (CES/CPS/P&C): @C:/Users/asingh/new_work/econ-templates/data/bls_pull.py
-Eurostat (public JSON-stat API, no key): @C:/Users/asingh/new_work/econ-templates/data/eurostat_pull.py
+Haver: C:/Users/asingh/new_work/econ-templates/data/haver_pull.py
+Bloomberg: C:/Users/asingh/new_work/econ-templates/data/bbg_xbbg.py
+Macrobond: C:/Users/asingh/new_work/econ-templates/data/macrobond_pull.py
+FRED: C:/Users/asingh/new_work/econ-templates/data/fred_pull.py
+BEA GDP-by-Industry: C:/Users/asingh/new_work/econ-templates/data/bea_pull.py
+BLS (CES/CPS/P&C): C:/Users/asingh/new_work/econ-templates/data/bls_pull.py
+Eurostat (public JSON-stat API, no key): C:/Users/asingh/new_work/econ-templates/data/eurostat_pull.py
 
 ## Haver — MANDATORY setup
 
@@ -30,7 +35,7 @@ Auto path detection is unreliable and will fail the connection if you skip it.
 
 ## Eurostat — public API, no key
 
-@C:/Users/asingh/new_work/econ-templates/data/eurostat_pull.py
+C:/Users/asingh/new_work/econ-templates/data/eurostat_pull.py
 
 - Plain HTTPS GET against the JSON-stat dissemination API — no key, no vendor
   DLL. Allowlist `ec.europa.eu` in sandbox.json for the project.
@@ -54,7 +59,7 @@ econ-templates is on the path. Every gotcha below is already encoded in
 the module's docstring — READ THE DOCSTRING before adapting one.
 
 Mortgage rates (Mortgage News Daily):
-@C:/Users/asingh/new_work/econ-templates/data/mnd_pull.py
+C:/Users/asingh/new_work/econ-templates/data/mnd_pull.py
 - The market-rate proxy when you need a daily 30Y fixed without a vendor
   entitlement. RenMac uses the "30 Yr. Fixed" series; resample("QS").mean()
   for a quarterly average. Other exposed series: 15 Yr. Fixed, 30 Yr. FHA,
@@ -72,7 +77,7 @@ Mortgage rates (Mortgage News Daily):
   "30 Yr. Fixed" — a vendor-side rename hard-fails the pull by design.
 
 Consumer Sentiment (UMich Surveys of Consumers):
-@C:/Users/asingh/new_work/econ-templates/data/umich_sca_scraper.py
+C:/Users/asingh/new_work/econ-templates/data/umich_sca_scraper.py
 - FINALS: FRED UMCSENT or Haver CSENT@USECON (1978→present). Use these
   directly — finals don't need the scraper.
 - PRELIMS: there is NO native preliminary ticker (not in Haver, FRED, or
@@ -89,7 +94,7 @@ Consumer Sentiment (UMich Surveys of Consumers):
   scrapers at wrap-up — this file is the index to it.
 
 Long-history Real PCE (chained 2017$):
-@C:/Users/asingh/new_work/econ-templates/data/real_pce_helper.py
+C:/Users/asingh/new_work/econ-templates/data/real_pce_helper.py
 - One call for Real PCE in chained 2017 dollars back to 1959. PCEC96 alone
   starts only 2007; this backward-chains DPCERA3M086SBEA (the quantity
   index, 1959→present) to PCEC96 via a single anchor (2007-01).
@@ -143,7 +148,7 @@ not copy it into `src/` — import it and pin the version.
   use of its level.
 - The package's own test suite proves the LIBRARY, not your analysis. If this
   project needs a guarantee, replicate a published aggregate from its own
-  components and gate on that in `40-validate.mdc` terms.
+  components and gate on that in `40-validate` terms.
 - If the import fails, the shared env predates the package: STOP and ask, do not
   vendor a copy. Source: https://github.com/renmac-econ/rmac_econ
 
@@ -154,7 +159,7 @@ subcomponent tickers, weights, or a PCE↔CPI/PPI proxy map, START HERE — thes
 were expensive to build and every ticker is verified against the source, not
 name-matched. Re-deriving them by MCP search is slower AND less reliable.
 
-PCE: @C:/Users/asingh/new_work/econ-templates/data/reference/pce/README.md
+PCE: C:/Users/asingh/new_work/econ-templates/data/reference/pce/README.md
 - `mb_pce_tickers_master.csv` — 151 core + 26 F&E nominal PCE tickers
   (Macrobond), bucketed Core Goods / Core Services / Food / Energy, with
   per-series start dates. Plus the 6 reference aggregates (core/total nominal
@@ -169,7 +174,7 @@ PCE: @C:/Users/asingh/new_work/econ-templates/data/reference/pce/README.md
 - `ismi_pce_panel_tickers.csv` — the 130-category Haver USNA panel (price /
   nominal / quantity) with core-vs-F&E classification.
 
-CPI: @C:/Users/asingh/new_work/econ-templates/data/reference/cpi/README.md
+CPI: C:/Users/asingh/new_work/econ-templates/data/reference/cpi/README.md
 - Four component baskets → Macrobond tickers, each verified against the BLS
   supplemental table exactly (max relative error 0.00e+00), each with a
   `detail` sheet (BLS series ID, item code, relative importance, SA status).
@@ -233,6 +238,12 @@ Load-bearing gotchas from building these:
   enumerated line-by-line here. Canonical mnemonics are in §1 of that file;
   the harvest text's inline names are informal. Port a ticker into this list
   only after re-vetting it individually.
+- S&P 500 daily close: SP500@DAILY (1941-43=10, from 1955). Used for the B-S
+  SP500_3M predictor (2026_rate_sensitive_sectors; matched the authors at 0.972).
+- Bloomberg Commodity Spot Index daily: PZDJAS@DAILY (Jan-7-91=100, from
+  1991-01-02). B-S BCOM_3M predictor (matched at 0.995); missing before 1991.
+- Total nonfarm payrolls (SA, thous, monthly): LANAGRA@USECON (from 1939). B-S
+  NFP_12M predictor (matched at 1.000).
 
 ## Discovering Haver mnemonics
 
@@ -256,6 +267,26 @@ this workspace, ASK — never guess.
 - Metadata only: the MCP finds and CONFIRMS series — it does NOT pull
   observations. After confirming the code@database ticker, fetch the
   data via the normal Haver path (the @haver_pull.py pattern above).
+
+## Discovering Macrobond series
+
+A `macrobond` MCP is also available (search + retrieval via the AI Data
+Feed). Haver stays the DEFAULT for ticker discovery — free to query and
+the confirmed-mnemonic list above is Haver-keyed. Use Macrobond when
+Haver coverage falls short, or when the project already sits on
+Macrobond tickers (the PCE/CPI reference sets above).
+
+- Unlike haver-metadata, this one RETRIEVES data too, and fetches
+  CONSUME UTS QUOTA. Preview first (`confirm=false`), show the user the
+  series count and names, wait for explicit approval, then re-call with
+  `confirm=true` and the returned invocation_token. Never skip the
+  preview to save a round-trip.
+- Call `get_instructions()` once per session before searching or
+  fetching — it returns Macrobond's own discovery and presentation rules.
+- Setup, and why the official Macrobond plugin CANNOT authenticate in
+  Cursor: C:/Users/asingh/new_work/econ-templates/mcp/README.md. If the
+  server shows `Incompatible auth server`, that's the known Cursor OAuth
+  mismatch — the fix is the client-credentials proxy, not re-installing.
 
 ## Weekly index alignment (reusable pattern)
 
@@ -299,3 +330,22 @@ Mandatory patterns from the references:
   across a large resolution set is the tell. Probe a handful of tickers and
   diff the realised endpoint against the catalog's claim before sizing a pull
   (the probe-before-pull helper in `data/`).
+
+## Monetary-policy shocks (high-frequency and narrative)
+
+C:/Users/asingh/new_work/econ-templates/data/mp_shocks.py
+C:/Users/asingh/new_work/econ-templates/data/reference/monetary_policy_shocks/README.md
+
+- START WITH THE README's strength table. Before building on any shock, compute the first-stage F
+  (`first_stage_f`) at the frequency and on the rate you will use; rule of thumb 10. The FOMC-only
+  Bauer-Swanson cleaned surprise is weak at quarterly frequency (F 0.7 on the 2-year, 1988-2019),
+  and weak-instrument LP-IV output is noise, not a wider band around the right answer.
+- Bauer-Swanson: authors' SF Fed file ends 2023-12. Rebuild/extend from USMPD with
+  `bs_rebuild_per_meeting` (recipe + target correlations in bauer_swanson_rebuild.md). USMPD's own
+  packaged surprise is RAW, not cleaned. Chair-speech surprises are not public.
+- Narrative Romer-Romer: unified Bügel-Hidalgo-Luetticke series (quarterly 1969-2020; monthly
+  file ends 2018-12) as the headline, Wieland-Yang (1969-2007) as the check. Strength is
+  concentrated before 1983; say so when presenting, and don't restart the sample in 1990 to get a
+  "modern" read (F 1.4-3.4, results are noise).
+- Sources: www.frbsf.org, www.federalreserve.gov, raw.githubusercontent.com. Use
+  `mp_shocks.download` (timeout, rejects HTML error pages).

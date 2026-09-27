@@ -1,6 +1,6 @@
----
-alwaysApply: true
----
+<!-- Claude Code version of econ-templates/desk-skeleton/.cursor/rules/adhoc.mdc, maintained by hand in desk-skeleton/claude/overrides/adhoc.md. Keep the two in step. -->
+
+> File paths in this document are references, not attachments: read a referenced file before writing code that mirrors it.
 
 # Ad-hoc econ desk — quick lookups & small calcs
 
@@ -21,11 +21,11 @@ Replace the project STOP-gate with a micro-preamble, then just do it:
    span + units + SA/NSA before pulling. NEVER guess a mnemonic. If several
    candidates fit, list them and pick with a one-line reason; ask only if it's
    genuinely unresolvable. (Full discovery discipline is in
-   `10-data-sources.mdc`, active in this workspace.)
+   the `10-data-sources` skill, available in this workspace.)
 3. **Pull + cache.** Use the reference patterns — Haver
-   `@C:/Users/asingh/new_work/econ-templates/data/haver_pull.py`, FRED
-   `@C:/Users/asingh/new_work/econ-templates/data/fred_pull.py`, Bloomberg
-   `@C:/Users/asingh/new_work/econ-templates/data/bbg_xbbg.py`. Save the raw
+   `C:/Users/asingh/new_work/econ-templates/data/haver_pull.py`, FRED
+   `C:/Users/asingh/new_work/econ-templates/data/fred_pull.py`, Bloomberg
+   `C:/Users/asingh/new_work/econ-templates/data/bbg_xbbg.py`. Save the raw
    pull to `cache/` as Parquet; print first/last date + row count so the
    window used is visible.
 4. **Show the calculation explicitly** — inputs → transform → result, with
@@ -39,8 +39,10 @@ Replace the project STOP-gate with a micro-preamble, then just do it:
 
 ## Rule freshness (once per session, before the first task)
 
-The rule files here and `sandbox.json` are **copies** — the originals live in
-`econ-templates`, and the desk is long-lived, so it silently falls behind.
+The rule files here — `CLAUDE.md`, `.claude/rules/`, `.claude/skills/`, and
+the Cursor copies in `.cursor/rules/` and `sandbox.json` — are **copies**:
+the originals live in `econ-templates`, and the desk is long-lived, so it
+silently falls behind.
 Check once, at the start of a session:
 
 ```bash
@@ -65,11 +67,11 @@ Check once, at the start of a session:
 - **Caveats travel with the number.** Vintage (real-time vs latest), SA vs
   NSA, real vs nominal, rounding — state whichever bites the answer.
 - **Promote reusable mnemonics.** If you confirm a new, broadly-useful
-  `code@database`, surface it for the `10-data-sources.mdc` Confirmed list on
+  `code@database`, surface it for the `10-data-sources` Confirmed list on
   a human-approve basis — don't auto-add (that list is trusted and reused
   without re-checking).
 - **Environment discipline** (Git Bash + shared venv) from
-  `05-environment.mdc` applies here too.
+  `05-environment` applies here too.
 
 ## What NOT to do
 
@@ -78,11 +80,12 @@ Check once, at the start of a session:
 - Don't run the full `40-validate` gates, the SA rules, or the project
   post-analysis flow (`wrap up` bundles, `plan.md`-driven Model details) —
   those belong to real projects. A chart made here follows
-  `30-charts-desk.mdc`; an email goes out only when the user asks, via
-  `60-email-desk.mdc`, written in the shared author voice.
+  `30-charts-desk`; an email goes out only when the user asks, via
+  `60-email-desk`, written in the shared author voice.
 - Don't guess a Haver mnemonic or invent a `@database` suffix — MCP-confirm
   or ask.
-- Don't quietly edit `.cursor/rules/*.mdc` or `sandbox.json` here to fix
+- Don't quietly edit `CLAUDE.md`, `.claude/`, `.cursor/rules/*.mdc` or
+  `sandbox.json` here to fix
   something — they're copies, and the fix dies at the next refresh. Change the
   `econ-templates` original, then refresh.
 - Don't hand back a bare number — show the calc, the series provenance, and

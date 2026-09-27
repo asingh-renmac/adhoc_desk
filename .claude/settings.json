@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "additionalDirectories": [
+      "C:/Users/asingh/new_work/econ-templates"
+    ],
+    "allow": [
+      "Bash(python)",
+      "Bash(python *)",
+      "Bash(which *)",
+      "Bash(echo *)",
+      "Bash(ls)",
+      "Bash(ls *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "ask": [
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(rm *)",
+      "Edit(//c/Users/asingh/new_work/econ-templates/**)"
+    ],
+    "deny": [
+      "Read(./config/.env)",
+      "Read(./.env)",
+      "Read(//c/Users/asingh/new_work/econ-templates/config/.env)"
+    ]
+  },
+  "skillOverrides": {
+    "renmac-analysis-writeup": "user-invocable-only",
+    "renmac-commentary": "user-invocable-only",
+    "renmac-titles-and-charts": "user-invocable-only",
+    "renmac-charts-build": "user-invocable-only",
+    "renmac-annotated-charts": "user-invocable-only"
+  }
+}
